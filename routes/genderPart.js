@@ -3,12 +3,12 @@ const router = express.Router();
 
 // What was the gender participation in Olympic games?
 
-const winter = `select * from
+const seasonSwitcher = season => `select * from
 (
 select count(id) as Men, year from
 (
 select year, count(athlete.id) as x, athlete.id from athlete_stg inner join athlete on athlete_stg.id = athlete.id
-where season = 'Winter'
+where season = '${season}'
 group by year, athlete.id
 order by x desc
 )
@@ -22,36 +22,7 @@ natural join
 select count(id) as Women, year from
 (
 select year, count(athlete.id) as x, athlete.id from athlete_stg inner join athlete on athlete_stg.id = athlete.id
-where season = 'Winter'
-group by year, athlete.id
-order by x desc
-)
-natural join athlete
-where sex = 'F'
-group by year
-order by year desc
-)`
-
-const summer = `select * from
-(
-select count(id) as Men, year from
-(
-select year, count(athlete.id) as x, athlete.id from athlete_stg inner join athlete on athlete_stg.id = athlete.id
-where season = 'Summer'
-group by year, athlete.id
-order by x desc
-)
-natural join athlete
-where sex = 'M'
-group by year
-order by year desc
-)
-natural join
-(
-select count(id) as Women, year from
-(
-select year, count(athlete.id) as x, athlete.id from athlete_stg inner join athlete on athlete_stg.id = athlete.id
-where season = 'Summer'
+where season = '${season}'
 group by year, athlete.id
 order by x desc
 )
@@ -64,22 +35,23 @@ order by year desc
 router.get("/(:season)", function(req, res, next) {
   async function run() {
     try {
-      const query = req.params.season === 'summer' ? summer : winter;
+      const query = seasonSwitcher(req.params.season === 'summer' ? 'Summer' : 'Winter');
       const result = await req.connection.execute(query);
-      // const sports = result.rows.reduce((acc, arr) => [...acc, arr[0]], []);
-      // const eventsCount = result.rows.reduce(
-      //   (acc, arr) => [...acc, arr[1]],
-      //   []
-      // );
-      // res.send({
-      //   data: {
-      //     sports,
-      //     eventsCount
-      //   },
-      //   error: false
-      // });
+      const year = result.rows.reduce((acc, arr) => [...acc, arr[0]], []);
+      const menCount = result.rows.reduce(
+        (acc, arr) => [...acc, arr[1]],
+        []
+      );
+      const womenCount = result.rows.reduce(
+        (acc, arr) => [...acc, arr[2]],
+        []
+      );
       res.send({
-        data: result.rows,
+        data: {
+          year,
+          menCount,
+          womenCount
+        },
         error: false
       });
     } catch (error) {

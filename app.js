@@ -8,6 +8,10 @@ var athlNumChange = require('./routes/athlNumChange');
 const growthPercAthl = require('./routes/growthPercAthl');
 const genderParticipation = require('./routes/genderPart');
 const genderRatio = require('./routes/genderRatio');
+const contrMedTally = require('./routes/contrMedTally');
+const avgages = require('./routes/avgages');
+const topMedalWinners = require('./routes/topMedalWinners');
+const otherInsights = require('./routes/otherInsights');
 
 const authentication = require('./utils/auth');
 
@@ -44,6 +48,10 @@ app.use('/athlnumchange', athlNumChange);
 app.use('/athlgrowthperc', growthPercAthl);
 app.use('/genderpart', genderParticipation);
 app.use('/genderratio', genderRatio);
+app.use('/countrytally', contrMedTally);
+app.use('/avgage', avgages);
+app.use('/topmedalwinners', topMedalWinners);
+app.use('/otherinsights', otherInsights);
 
 
 // catch 404 and forward to error handler
