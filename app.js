@@ -3,7 +3,12 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
-var indexRouter = require('./routes/index');
+var eventsCount = require('./routes/eventsCount');
+var athlNumChange = require('./routes/athlNumChange');
+const growthPercAthl = require('./routes/growthPercAthl');
+const genderParticipation = require('./routes/genderPart');
+const genderRatio = require('./routes/genderRatio');
+
 const authentication = require('./utils/auth');
 
 // process.env['PATH'] = path.join(__dirname, '/instantclient_18_1') + ';' + process.env['PATH'];
@@ -34,7 +39,12 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', indexRouter);
+app.use('/', eventsCount);
+app.use('/athlnumchange', athlNumChange);
+app.use('/athlgrowthperc', growthPercAthl);
+app.use('/genderpart', genderParticipation);
+app.use('/genderratio', genderRatio);
+
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

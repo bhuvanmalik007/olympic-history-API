@@ -3,7 +3,7 @@ const router = express.Router();
 
 const winter = `select * from (select spt_name, count(*) as x
 from event inner join game on game.game_name = event.game_name
-where game.season = ‘Winter’
+where game.season = 'Winter'
 group by spt_name
 order by x desc)
 WHERE ROWNUM <= 10`
@@ -23,7 +23,6 @@ router.get("/eventscount/(:season)", function(req, res, next) {
         (acc, arr) => [...acc, arr[1]],
         []
       );
-
       res.send({
         data: {
           sports,
