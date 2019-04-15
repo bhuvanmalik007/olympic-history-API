@@ -28,6 +28,7 @@ router.get("/(:gender)", function(req, res, next) {
   async function run() {
     try {
       const query = genderSwitcher(req.params.gender === 'male' ? 'M' : 'F');
+      console.log(query);
       const result = await req.connection.execute(query);
       const name = result.rows.reduce((acc, arr) => [...acc, arr[0]], []);
       const medalCount = result.rows.reduce(
