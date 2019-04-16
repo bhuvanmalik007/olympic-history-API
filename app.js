@@ -12,9 +12,11 @@ const contrMedTally = require('./routes/contrMedTally');
 const avgages = require('./routes/avgages');
 const topMedalWinners = require('./routes/topMedalWinners');
 const otherInsights = require('./routes/otherInsights');
-const Games = require('./routes/gamesPage');
+const Games = require('./routes/pages/gamesPage');
 const lists = require('./routes/generalQueries');
-const countriesPage = require('./routes/countriesPage');
+const countriesPage = require('./routes/pages/countriesPage');
+const athletesPage = require('./routes/pages/athletesPage');
+const sportsPage = require('./routes/pages/sportsPage');
 
 const authentication = require('./utils/auth');
 
@@ -58,7 +60,8 @@ app.use('/otherinsights', otherInsights);
 app.use('/lists', lists);
 app.use('/games', Games);
 app.use('/countries', countriesPage);
-
+app.use('/athletes', athletesPage);
+app.use('/sports', sportsPage);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
