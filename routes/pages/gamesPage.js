@@ -11,6 +11,12 @@ const topWinnerQuery = (year, season, gender) => `select distinct y.Ath_Name, y.
 where a.id=p.id and e.event_id=p.event_id and e.game_name=g.game_name and a.sex='${gender}' and g.game_name='${year} ${season}' and medal<>'na' group by p.id,ath_name order by count(*) desc) where  rownum<11)y,
 participates_in p1,event e1 where y.id=p1.id and  p1.event_id=e1.event_id order by y.cnt desc`
 
+// `select distinct y.Ath_Name, y.cnt,team_name  from
+// (select * from
+// (select p.id, ath_name, count(*) cnt from participates_in p, event e, game g ,athlete a
+// where a.id=p.id and e.event_id=p.event_id and e.game_name=g.game_name and a.sex='${gender}' and g.game_name='${year} ${season}' and medal<>'na' group by p.id,ath_name order by count(*) desc) where  rownum<11)y,
+// participates_in p1,event e1 where y.id=p1.id and  p1.event_id=e1.event_id order by y.cnt desc`
+
 
 router.get("/(:year)/(:season)/(:gender)", function(req, res, next) {
   async function run() {

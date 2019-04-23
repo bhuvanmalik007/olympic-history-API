@@ -50,7 +50,7 @@ router.get("/bestsexratio", function(req, res, next) {
       (
       select count(id) as Men, noc
       from
-      athlete_stg
+      olympic_stg
       where sex = 'M'
       group by noc
       )
@@ -58,7 +58,7 @@ router.get("/bestsexratio", function(req, res, next) {
       (
       select count(id) as Women, noc
       from
-      athlete_stg
+      olympic_stg
       where sex = 'F'
       group by noc
       )

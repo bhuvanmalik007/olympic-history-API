@@ -7,7 +7,7 @@ const seasonSwitcher = season => `select year, round(Women/Men,2) as gender_rati
 (
 select count(id) as Men, year from
 (
-select year, count(athlete.id) as x, athlete.id from athlete_stg inner join athlete on athlete_stg.id = athlete.id
+select year, count(athlete.id) as x, athlete.id from olympic_stg inner join athlete on olympic_stg.id = athlete.id
 where season = '${season}'
 group by year, athlete.id
 order by x desc
@@ -21,7 +21,7 @@ natural join
 (
 select count(id) as Women, year from
 (
-select year, count(athlete.id) as x, athlete.id from athlete_stg inner join athlete on athlete_stg.id = athlete.id
+select year, count(athlete.id) as x, athlete.id from olympic_stg inner join athlete on olympic_stg.id = athlete.id
 where season = '${season}'
 group by year, athlete.id
 order by x desc

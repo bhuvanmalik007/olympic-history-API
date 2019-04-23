@@ -2,34 +2,22 @@ const express = require("express");
 const router = express.Router();
 
 const countryResolver = (country, season) => ({
-  participationCountQuery: `(select team_name,year,  season, count(*) cnt from participates_in p, event e, game g
-  where e.event_id=p.event_id and e.game_name=g.game_name and team_name='${country}' and season='${season}' group by  team_name, year, season )order by year`,
-  successPercQuery: `select x.team_name,x.year, x.cnt/y.totcnt*100 from
-  (select team_name,year, count(*) cnt from participates_in p, event e, game g
-  where e.event_id=p.event_id and e.game_name=g.game_name and team_name='${country}' and medal<>'na' group by  team_name, year )x,
-  (select team_name,year, count(*) totcnt from participates_in p, event e, game g
-  where e.event_id=p.event_id and e.game_name=g.game_name and team_name='${country}' group by  team_name, year )y
-  where x.team_name=y.team_name and x.year=y.year
-  order by x.year`,
-  winnerGenderRatioQuery: `select x.team_name,x.year, x.mcnt/y.fcnt from
-  (select team_name,year, count(*) as mcnt from participates_in p, event e, game g , athlete a
-  where e.event_id=p.event_id and e.game_name=g.game_name and a.id=p.id and a.sex='M' and team_name='${country}' and medal<>'na' group by  team_name, year )x,
-  (select team_name,year, count(*) as fcnt from participates_in p, event e, game g , athlete a
-  where e.event_id=p.event_id and e.game_name=g.game_name and a.id=p.id and a.sex='F' and team_name='${country}' and medal<>'na' group by  team_name, year )y
-  where x.team_name=y.team_name and x.year=y.year
-  order by x.year`
+  participationCountQuery: `(select t.noc,year,  season, count(*) cnt from participates_in p, event e, game g, team t
+  where e.event_id=p.event_id and e.game_name=g.game_name and t.team_name=p.team_name and p.event_id=t.event_id and season='${season}' and noc='${country}' group by  t.noc, year, season ) order by year`,
+  successPercQuery: `select x.noc,x.year, x.cnt/y.totcnt*100 from(select t.noc,year, count(*) cnt from participates_in p, event e, game g , team t where e.event_id=p.event_id and e.game_name=g.game_name and t.team_name=p.team_name and p.event_id=t.event_id and noc='${country}' and  medal<>'na' group by t.noc, year )x,(select t.noc,year, count(*) totcnt from participates_in p, event e, game g , team t where e.event_id=p.event_id and e.game_name=g.game_name and t.team_name=p.team_name and p.event_id=t.event_id and noc='${country}' group by  t.noc, year ) y where x.noc=y.noc and x.year=y.year order by x.year`,
+  winnerGenderRatioQuery: `select x.noc,x.year, x.mcnt/y.fcnt from(select noc,year, count(*) as mcnt from participates_in p, event e, game g , athlete a, team t where e.event_id=p.event_id and e.game_name=g.game_name and a.id=p.id and t.team_name=p.team_name and p.event_id=t.event_id and a.sex='M' and t.noc='${country}' and medal<>'na' group by  noc, year )x,(select noc,year, count(*) as fcnt from participates_in p, event e, game g , athlete a, team t where e.event_id=p.event_id and e.game_name=g.game_name and a.id=p.id and t.team_name=p.team_name and p.event_id=t.event_id and a.sex='F' and t.noc='${country}' and medal<>'na' group by  noc, year )y where x.noc=y.noc and x.year=y.year order by x.year`
 })
 
 router.get("/", function(req, res, next) {
   async function run() {
     try {
-      const query = countryResolver(req.query.country, 'Winter').participationCountQuery;
+      const query = countryResolver(req.query.country, 'Summer').participationCountQuery;
       const result = await req.connection.execute(query);
       const participationCountSummer = {
         years: result.rows.reduce((acc, arr) => [...acc, arr[1]], []),
         values:  result.rows.reduce((acc, arr) => [...acc, arr[3]], [])
       }
-      const query1 = countryResolver(req.query.country, 'Summer').participationCountQuery;
+      const query1 = countryResolver(req.query.country, 'Winter').participationCountQuery;
       const result1 = await req.connection.execute(query1);
       const participationCountWinter = {
         years: result1.rows.reduce((acc, arr) => [...acc, arr[1]], []),
@@ -59,6 +47,30 @@ router.get("/", function(req, res, next) {
 
       res.send({
         data,
+        error: false
+      });
+    } catch (error) {
+      console.error(error);
+      res.json({
+        error
+      });
+    }
+  }
+
+  run();
+});
+
+
+router.get("/getcountries", function(req, res, next) {
+  async function run() {
+    try {
+      const query = `select distinct noc from team`;
+      const result = await req.connection.execute(query);
+      const nocList = result.rows.reduce((acc, arr) => [...acc, arr[0]], []);
+      res.send({
+        data: {
+          nocList
+        },
         error: false
       });
     } catch (error) {

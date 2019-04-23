@@ -3,7 +3,7 @@ const router = express.Router();
 
 // How has the number of athletes changed over the years?
 
-const seasonSwitcher = season => `select year, count(id) as y from (select year, count(*) as x, athlete.id from athlete_stg inner join athlete on athlete_stg.id = athlete.id
+const seasonSwitcher = season => `select year, count(id) as y from (select year, count(*) as x, athlete.id from olympic_stg inner join athlete on olympic_stg.id = athlete.id
 where season = '${season}'
 group by year, athlete.id
 order by x desc )

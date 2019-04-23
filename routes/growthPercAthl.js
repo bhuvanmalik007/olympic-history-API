@@ -5,7 +5,7 @@ const router = express.Router();
 
 const seasonSwitcher = season => `select c_o, round((c_p - p_p)*100/p_p) as growth from
 (
-select year as c_o, count(id) as c_p from (select year, count(*) as x, athlete.id from athlete_stg inner join athlete on athlete_stg.id = athlete.id
+select year as c_o, count(id) as c_p from (select year, count(*) as x, athlete.id from olympic_stg inner join athlete on olympic_stg.id = athlete.id
 where season = '${season}'
 group by year, athlete.id
 order by x desc )
@@ -14,7 +14,7 @@ order by year desc
 )
 cross join
 (
-select year as p_o, count(id) as p_p from (select year, count(*) as x, athlete.id from athlete_stg inner join athlete on athlete_stg.id = athlete.id
+select year as p_o, count(id) as p_p from (select year, count(*) as x, athlete.id from olympic_stg inner join athlete on olympic_stg.id = athlete.id
 where season = '${season}'
 group by year, athlete.id
 order by x desc )
