@@ -60,8 +60,4 @@ router.get("/(:season)", function(req, res, next) {
   run();
 });
 
-router.get("/", function(req, res, next) {
-  res.json({ data: "DBMS Project" });
-});
-
 module.exports = router;

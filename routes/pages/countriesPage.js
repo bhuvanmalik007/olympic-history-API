@@ -84,5 +84,4 @@ router.get("/getcountries", function(req, res, next) {
   run();
 });
 
-
 module.exports = router;

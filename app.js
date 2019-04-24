@@ -17,6 +17,7 @@ const lists = require('./routes/generalQueries');
 const countriesPage = require('./routes/pages/countriesPage');
 const athletesPage = require('./routes/pages/athletesPage');
 const sportsPage = require('./routes/pages/sportsPage');
+const filterPage = require('./routes/pages/filterPage');
 
 const authentication = require('./utils/auth');
 
@@ -62,6 +63,7 @@ app.use('/games', Games);
 app.use('/countries', countriesPage);
 app.use('/athletes', athletesPage);
 app.use('/sports', sportsPage);
+app.use('/home', filterPage);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

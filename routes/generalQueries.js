@@ -65,8 +65,28 @@ router.get("/sports/(:season)", function(req, res, next) {
   run();
 });
 
-router.get("/", function(req, res, next) {
-  res.json({ data: "DBMS Project" });
+router.get("/dbrowcount", function(req, res, next) {
+  async function run() {
+    try {
+      const query = `select count(*) from athlete a, game g, event e, team t, participant pn, participates_in p
+      where e.game_name=g.game_name and t.event_id=e.event_id and pn.id=a.id and pn.event_id=e.event_id and p.id=pn.id and p.event_id=pn.event_id and p.event_id=t.event_id and p.team_name=t.team_name`;
+      const result = await req.connection.execute(query);
+      const queryCount = result.rows.reduce((acc, arr) => [...acc, arr[0]], []);
+      res.send({
+        data: {
+          queryCount
+        },
+        error: false
+      });
+    } catch (error) {
+      console.error(error);
+      res.json({
+        error
+      });
+    }
+  }
+
+  run();
 });
 
 module.exports = router;
