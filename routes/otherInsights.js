@@ -1,5 +1,7 @@
 const express = require("express");
 const router = express.Router();
+const coordinatesGenerator = require('./../helpers');
+
 
 // How has the number of nations participating in Olympics changed over the years?
 
@@ -41,7 +43,7 @@ const queryResolver = param => ({
     where e.game_name=g.game_name and p.event_id=e.event_id and p.event_id=t.event_id and p.team_name=t.team_name and p.id=pn.id and p.event_id=pn.event_id and medal='Bronze' and pn.age>='50'
     group by spt_name)brz
     using(spt_name)) sb
-    using (spt_name) order by total_medal_count desc FETCH FIRST 10 ROWS ONLY`,
+    using (spt_name) order by total_medal_count desc FETCH FIRST 20 ROWS ONLY`,
     gymnweight: ` select year,round(winner_avg_weight),round(loser_avg_weight),round(loser_avg_weight)-round(winner_avg_weight) as difference from(select year,avg(weight) loser_avg_weight  from event e, game g, participates_in p, team t, (select * from participant where weight<>0) pn, athlete a where e.game_name=g.game_name and p.event_id=e.event_id and p.event_id=t.event_id and p.team_name=t.team_name and p.id=pn.id and p.event_id=pn.event_id and a.id=pn.id and medal='na' and a.sex='M' and spt_name='Gymnastics'group by year) loss full outer join(select year,avg(weight) winner_avg_weight from event e, game g, participates_in p,team t, (select * from participant where weight<>0) pn, athlete a where e.game_name=g.game_name and p.event_id=e.event_id and p.event_id=t.event_id and p.team_name=t.team_name and p.id=pn.id and p.event_id=pn.event_id and a.id=pn.id and medal<>'na' and a.sex='M' and spt_name='Gymnastics'group by year) win using (year) where winner_avg_weight is not null and loser_avg_weight is not null order by year`,
     bBallHeight: `select year,round(winner_avg_height),round(loser_avg_height), round(winner_avg_height)-round(loser_avg_height) as "difference(winner-loser)" from
     (select year,avg(height) loser_avg_height  from event e, game g, participates_in p, team t, (select * from participant where height<>0) pn, athlete a
@@ -51,7 +53,26 @@ const queryResolver = param => ({
     (select year,avg(height) winner_avg_height from event e, game g, participates_in p, team t, (select * from participant where height<>0) pn, athlete a
     where e.game_name=g.game_name and p.event_id=e.event_id and p.event_id=t.event_id and p.team_name=t.team_name and p.id=pn.id and p.event_id=pn.event_id and a.id=pn.id and medal<>'na' and a.sex='M' and spt_name='Basketball'
     group by year) win
-    using (year) order by year`
+    using (year) order by year`,
+    leaderBoard: `select * from
+    (select year,noc,COALESCE (gcnt, 0) AS gcnt , COALESCE (scnt, 0) as scnt,COALESCE (bcnt, 0) as bcnt, (COALESCE (gcnt, 0) *4+ COALESCE (scnt, 0)*2+COALESCE (bcnt, 0)*1) as pnt,
+    DENSE_RANK() OVER (partition by year ORDER BY (COALESCE (gcnt, 0) *4+ COALESCE (scnt, 0)*2+COALESCE (bcnt, 0)*1) DESC) AS rank from
+    (select g.year, noc, count(medal) as gcnt  from participates_in p, event e, game g, team t
+    where p.event_id=e.event_id and e.game_name=g.game_name and t.team_name=p.team_name and p.event_id=t.event_id and medal='Gold' and season='${param}'
+    group by g.year, t.noc)gld
+    full outer join
+    (select year,noc,scnt,bcnt from
+    (select g.year, noc, count(medal) as scnt from participates_in p, event e, game g, team t
+    where p.event_id=e.event_id and e.game_name=g.game_name and t.team_name=p.team_name and p.event_id=t.event_id and medal='Silver' and season='${param}'
+    group by g.year, t.noc) slv
+    full outer join
+    (select g.year, noc, count(medal) as bcnt from participates_in p, event e, game g, team t
+    where p.event_id=e.event_id and e.game_name=g.game_name and t.team_name=p.team_name and p.event_id=t.event_id and medal='Bronze' and season='${param}'
+    group by g.year, t.noc) brz
+    using (year,noc)) sb
+    using (year,noc))
+    where rank<=3
+    order by year,pnt desc`
 })
 router.get("/nationparticcntchange/(:season)", function(req, res, next) {
   async function run() {
@@ -208,13 +229,17 @@ router.get("/seniorwinners", function(req, res, next) {
     try {
       const query = queryResolver().seniorWinners;
       const result = await req.connection.execute(query);
-      const seniorWinners = result.rows.reduce((acc, arr) => [...acc, {sport: arr[0], gold: arr[1], silver: arr[2], bronze: arr[3], total: arr[4]}], []);
+      const sport = result.rows.reduce((acc, arr) => [...acc, arr[0]], []);
+      // const seniorWinners = result.rows.reduce((acc, arr) => [...acc, {sport: arr[0], gold: arr[1], silver: arr[2], bronze: arr[3], total: arr[4]}], []);
+      const medalTally = result.rows.reduce((acc, arr) => [...acc, [arr[1], arr[2], arr[3]]],[]);
+      coordinatesArray = coordinatesGenerator(medalTally);
       // // const sportName = result.rows.reduce((acc, arr) => [...acc, arr[0]], []);
       // // const country = result.rows.reduce((acc, arr) => [...acc, arr[1]], []);
 
       res.send({
         data: {
-          seniorWinners
+          sport,
+          coordinatesArray
         },
         error: false
       });
@@ -287,6 +312,38 @@ router.get("/bballheight", function(req, res, next) {
           winnerAvgWeights,
           loserAvgWeight,
           difference
+        },
+        error: false
+      });
+    } catch (error) {
+      console.error(error);
+      res.json({
+        error
+      });
+    }
+  }
+
+  run();
+});
+
+
+router.get("/leaderboard/(:season)", function(req, res, next) {
+  async function run() {
+    try {
+      const query = queryResolver(req.params.season).leaderBoard;
+      const result = await req.connection.execute(query);
+
+      // const leaderBoard = result.rows.reduce((acc, arr) => [...acc, {year: arr[0], winnerWeight: arr[1], loserWeight: arr[2], difference: arr[3]}], []);
+      // for()
+      // const years = result.rows.reduce((acc, arr) => [...acc, arr[0]], []);
+      // const winnerAvgWeights = result.rows.reduce((acc, arr) => [...acc, arr[1]], []);
+      // const loserAvgWeight = result.rows.reduce((acc, arr) => [...acc, arr[2]], []);
+      // const difference = result.rows.reduce((acc, arr) => [...acc, arr[3]], []);
+
+      res.send({
+        data: {
+          result
+
         },
         error: false
       });

@@ -25,7 +25,6 @@ router.get("/search/", function(req, res, next) {
       console.log(result1)
 
       const data = {
-        harsha: 'sucks dick',
         athletes
       }
 
